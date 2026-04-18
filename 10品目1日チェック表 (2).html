@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>食品10品目チェック</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:#fff8f3;min-height:100vh;padding:16px}
+.card{background:#fff;max-width:440px;margin:0 auto;border-radius:20px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08)}
+.header{background:#ff8c69;padding:16px 20px 12px;text-align:center}
+.header-sub{font-size:10px;color:rgba(255,255,255,0.85);letter-spacing:2px;margin-bottom:3px}
+.header-title{font-size:20px;font-weight:900;color:#fff}
+.header-desc{font-size:10px;color:rgba(255,255,255,0.8);margin-top:4px}
+.legend{display:flex;gap:10px;padding:8px 16px;background:#fff8f3;border-bottom:1px solid #ffe8d6;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:#888}
+.leg-badge{width:26px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.items{padding:10px 16px 0}
+.item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #fff0e8}
+.item:last-child{border-bottom:none}
+.item-left{display:flex;align-items:center;gap:8px}
+.num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+.item-name{font-size:13px;font-weight:500;color:#333}
+.item-hint{font-size:10px;color:#bbb;margin-top:1px}
+.toggle{display:flex;gap:5px}
+.btn{width:36px;height:30px;border-radius:8px;border:1.5px solid #e8d5c8;background:#fff;font-size:12px;font-weight:700;color:#bbb;cursor:pointer;transition:all .12s;font-family:'Noto Sans JP',sans-serif}
+.btn.active-yes{background:#ff8c69;border-color:#ff8c69;color:#fff}
+.btn.active-half{background:#ffb347;border-color:#ffb347;color:#fff}
+.btn.active-no{background:#b2bec3;border-color:#b2bec3;color:#fff}
+.score-area{padding:12px 16px;background:#fff8f3;border-top:1px solid #ffe8d6;display:flex;align-items:center;justify-content:space-between}
+.score-num{font-size:28px;font-weight:900;color:#ccc;transition:color .2s}
+.score-num.good{color:#27ae60}
+.score-num.mid{color:#ff8c69}
+.score-num.low{color:#e74c3c}
+.score-max{font-size:13px;color:#ccc}
+.score-msg{font-size:11px;color:#bbb;text-align:right;line-height:1.6}
+.advice-btn{display:block;width:calc(100% - 32px);margin:12px 16px;padding:12px;background:#ff8c69;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:'Noto Sans JP',sans-serif;cursor:pointer}
+.advice-btn:disabled{background:#e8d5c8;cursor:not-allowed;font-size:12px}
+.advice-area{margin:0 16px 16px;padding:14px;background:#fff8f3;border-radius:12px;border:1px solid #ffe8d6;display:none}
+.advice-title{font-size:12px;font-weight:700;color:#ff8c69;margin-bottom:10px}
+.advice-item{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #ffe8d6}
+.advice-item:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.advice-food{font-size:11px;font-weight:700;color:#ff8c69;margin-bottom:3px}
+.advice-body{font-size:12px;color:#555;line-height:1.7}
+.advice-all-ok{font-size:13px;color:#27ae60;font-weight:700;text-align:center;padding:8px 0}
+.reset-wrap{text-align:center;padding:4px 0 16px}
+.reset-btn{font-size:11px;color:#bbb;background:#fff;border:1px solid #e8d5c8;border-radius:20px;padding:5px 16px;cursor:pointer}
+.notice{font-size:10px;color:#ccc;text-align:center;padding:0 16px 8px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="header-sub">スラリ子ちゃんママの台所</div>
+    <div class="header-title">食品10品目 今日のチェック</div>
+    <div class="header-desc">全品目に○△×をつけてアドバイスをもらおう</div>
+  </div>
+
+  <div class="legend">
+    <div class="leg"><div class="leg-badge" style="background:#ff8c69;color:#fff">○</div>食べた</div>
+    <div class="leg"><div class="leg-badge" style="background:#ffb347;color:#fff">△</div>少し食べた</div>
+    <div class="leg"><div class="leg-badge" style="background:#b2bec3;color:#fff">×</div>食べていない</div>
+  </div>
+
+  <div class="items" id="items"></div>
+
+  <div class="score-area">
+    <div style="display:flex;align-items:baseline;gap:4px">
+      <span class="score-num" id="score-num">0</span>
+      <span class="score-max">/ 10品目</span>
+    </div>
+    <div class="score-msg" id="score-msg">全品目にチェックしてね</div>
+  </div>
+
+  <button class="advice-btn" id="advice-btn" onclick="showAdvice()" disabled>全品目チェックするとアドバイスが出ます</button>
+
+  <div class="advice-area" id="advice-area">
+    <div class="advice-title">今日の食卓アドバイス</div>
+    <div id="advice-body"></div>
+  </div>
+
+  <div class="notice" id="notice">全品目に○△×を入れるとアドバイスが表示されます</div>
+
+  <div class="reset-wrap">
+    <button class="reset-btn" onclick="resetAll()">リセット</button>
+  </div>
+</div>
+
+<script>
+const foods=[
+  {name:"肉類",hint:"鶏・豚・牛など",color:"#e74c3c",
+   advice:[
+     "鶏ささみや豚ひれ肉が低脂質で成長期にぴったり🍖",
+     "明日の朝は卵焼きと一緒にささみを入れるだけで簡単！",
+     "揚げないからあげ（オーブン20分）もおすすめだよ。"
+   ]},
+  {name:"魚介類",hint:"魚・貝・えびなど",color:"#2980b9",
+   advice:[
+     "しらすをご飯にかけるだけで鉄分＆カルシウム補給🐟",
+     "ツナ缶をスープや炊き込みご飯に混ぜるだけでOK！",
+     "鮭フレークをおにぎりの具にすると補食にも使えるよ。"
+   ]},
+  {name:"卵",hint:"目玉焼き・卵焼きなど",color:"#f39c12",
+   advice:[
+     "卵は完全栄養食！朝の卵かけご飯でサクッと補給🥚",
+     "スープに溶き卵を入れるだけで栄養がぐっとアップ。",
+     "ゆで卵を補食として冷蔵庫に常備しておくと便利だよ。"
+   ]},
+  {name:"大豆・大豆製品",hint:"豆腐・納豆・豆乳など",color:"#27ae60",
+   advice:[
+     "納豆は毎朝ご飯にかけるだけで植物性タンパク質を補給🫘",
+     "味噌汁に豆腐を足すだけで大豆もグルタミンも一緒に摂れる！",
+     "冷奴はそのまま出せる最速の一品。すりごまをかけてね。"
+   ]},
+  {name:"牛乳・乳製品",hint:"チーズ・ヨーグルトなど",color:"#8e44ad",
+   advice:[
+     "ベビーチーズを補食に常備しておくと手軽にカルシウム補給🧀",
+     "粉チーズ（パルメザン）を炒め物やスープにふりかけるだけでOK！",
+     "ヨーグルトをデザートにすると腸内環境も整えられるよ。"
+   ]},
+  {name:"緑黄色野菜",hint:"にんじん・ブロッコリーなど",color:"#16a085",
+   advice:[
+     "プチトマトはそのまま添えるだけ。切る必要もなし🍅",
+     "ブロッコリーはレンチン3分で完成。抗酸化成分が豊富！",
+     "にんじんをスープに入れるだけで骨端線への栄養が届きやすくなるよ。"
+   ]},
+  {name:"海藻類",hint:"わかめ・のり・昆布など",color:"#34495e",
+   advice:[
+     "乾燥わかめを味噌汁に入れるだけ。戻す手間もなし🌿",
+     "とろろ昆布をスープに乗せるだけでミネラルがプラスできる！",
+     "海苔をご飯に巻くだけで鉄分・マグネシウムが補える。毎朝の定番にしてみて。"
+   ]},
+  {name:"いも類",hint:"さつまいも・じゃがいもなど",color:"#d35400",
+   advice:[
+     "ふかし芋を補食として冷蔵庫に常備しておくのがおすすめ🍠",
+     "スープにじゃがいもを入れるだけで食物繊維もエネルギーも補給できる！",
+     "こんにゃくを煮物に入れると低カロリーでボリュームアップできるよ。"
+   ]},
+  {name:"果物",hint:"みかん・バナナなど",color:"#c0392b",
+   advice:[
+     "バナナはそのまま補食に最適。鉄分の吸収を助けるビタミンCも豊富🍌",
+     "みかんやキウイを切って冷蔵庫に入れておくだけで食べてくれるよ！",
+     "冷凍マンゴーを補食にするのもおすすめ。解凍するだけで簡単。"
+   ]},
+  {name:"油",hint:"えごま油・魚の脂など",color:"#7f8c8d",
+   advice:[
+     "えごま油を味噌汁やご飯に小さじ1かけるだけでオメガ3補給🫒",
+     "加熱しないで使うのがポイント！仕上げにかけるだけでOK。",
+     "青魚（鮭・さば・いわし）を食べた日は油はクリアだよ。"
+   ]},
+];
+
+const NONE=0,YES=1,HALF=2,NO=3;
+let states=Array(10).fill(NONE);
+
+function build(){
+  const el=document.getElementById("items");
+  el.innerHTML="";
+  foods.forEach((f,fi)=>{
+    const row=document.createElement("div");
+    row.className="item";
+    row.innerHTML=`
+      <div class="item-left">
+        <div class="num" style="background:${f.color}">${fi+1}</div>
+        <div>
+          <div class="item-name">${f.name}</div>
+          <div class="item-hint">${f.hint}</div>
+        </div>
+      </div>
+      <div class="toggle">
+        <button class="btn ${states[fi]===YES?'active-yes':''}" onclick="setS(${fi},${YES})">○</button>
+        <button class="btn ${states[fi]===HALF?'active-half':''}" onclick="setS(${fi},${HALF})">△</button>
+        <button class="btn ${states[fi]===NO?'active-no':''}" onclick="setS(${fi},${NO})">×</button>
+      </div>`;
+    el.appendChild(row);
+  });
+  updateScore();
+}
+
+function setS(fi,val){
+  states[fi]=states[fi]===val?NONE:val;
+  build();
+  document.getElementById("advice-area").style.display="none";
+}
+
+function updateScore(){
+  const cnt=states.filter(s=>s===YES||s===HALF).length;
+  const answered=states.filter(s=>s!==NONE).length;
+  const allAnswered=answered===10;
+
+  const el=document.getElementById("score-num");
+  el.textContent=cnt;
+  el.className="score-num"+(cnt>=8?" good":cnt>=5?" mid":answered>0?" low":"");
+
+  const msg=document.getElementById("score-msg");
+  if(answered===0) msg.textContent="全品目にチェックしてね";
+  else if(!allAnswered) msg.innerHTML=`あと${10-answered}品目<br>チェックしてね`;
+  else if(cnt>=10) msg.innerHTML="全品目クリア！🌱<br>すばらしい";
+  else if(cnt>=8) msg.innerHTML="よく頑張ってる！<br>あと少し";
+  else if(cnt>=5) msg.innerHTML="いい感じ！<br>足りない品目を補おう";
+  else msg.innerHTML="アドバイスを参考に<br>足してみてね";
+
+  const btn=document.getElementById("advice-btn");
+  const notice=document.getElementById("notice");
+  if(allAnswered){
+    btn.disabled=false;
+    btn.textContent="足りない品目のアドバイスを見る";
+    notice.style.display="none";
+  } else {
+    btn.disabled=true;
+    btn.textContent=`全品目チェックするとアドバイスが出ます（あと${10-answered}品目）`;
+    notice.style.display="block";
+  }
+}
+
+function showAdvice(){
+  const missing=foods.filter((_,i)=>states[i]===NO);
+  const area=document.getElementById("advice-area");
+  const body=document.getElementById("advice-body");
+  area.style.display="block";
+  body.innerHTML="";
+
+  if(missing.length===0){
+    body.innerHTML='<div class="advice-all-ok">10品目全部クリア！🌱<br>今日の食卓は満点です！この調子で続けてね。</div>';
+    return;
+  }
+
+  missing.forEach(f=>{
+    const div=document.createElement("div");
+    div.className="advice-item";
+    div.innerHTML=`<div class="advice-food">【${f.name}】</div>
+    <div class="advice-body">${f.advice.join("<br>")}</div>`;
+    body.appendChild(div);
+  });
+
+  area.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function resetAll(){
+  states=Array(10).fill(NONE);
+  document.getElementById("advice-area").style.display="none";
+  build();
+}
+
+build();
+</script>
+</body>
+</html>
